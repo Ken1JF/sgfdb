@@ -1,0 +1,46 @@
+# File:		sgfdb/README
+# Project:	ahgo
+
+# Author:	Ken Friedenbach
+# Copyright, 2009-2014. 
+# All rights reserved
+ 
+The sgfdb package consists of the following files:
+	sgfdb - defines functions for reading and writing an SGF database,
+        i.e. a directory of directories of .sgf files (such as GoGoD)
+	
+The GoGoD database of professional Go games is available for purchase from:
+	http://www.gogod.co.uk/
+and makes an excellent test database.
+
+		CountFilesAndMoves and CountDirectory
+		=====================================
+
+These two functions, together with servers and channels provides an 
+    example of how to take advantage of multiple processors and threads 
+    in processing an SGF database.
+
+The function CountFilesAndMoves uses ioutil.ReadDir to read the base 
+    directory. It then calls startServers, which sets up some communication 
+    channels and starts two servers, a request server and result server. 
+    CountFilesAndMoves then iterates through the directories, builds a request 
+    for each sub-directory and sends each request to the request channel. 
+
+The result is a count of the number of files and the number of nodes (semi-colons) 
+    in each directory.
+		
+		ReadAndWriteDatabase and ReadAndWriteDirectory
+		==============================================
+	
+The function ReadAndWriteDatabase iterates through directories in the 
+    base directory, calling the function ReadAndWriteDirectory. This function 
+    iterates through the .sgf files in each directory, calling ioutil.ReadFile 
+    and sgf.ParseFile to build a parse tree. ReadAndWriteDirectory then 
+    calls sgf.WriteFile to write a copy of each files in a copy of each 
+    directory in the directory /testout.
+
+There is a script, compareSGFs.txt, which is used to compare the 
+    original SGF files to the ones written by sgf.WriteFile. It uses
+    the program diffsgf which ignores white space.
+
+		
