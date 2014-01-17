@@ -23,7 +23,6 @@ import (
 )
 
 // number of parallel executions
-// TODO: figure out why program crashes when more than 1
 //
 const MAX_AT_ONCE = 4
 
@@ -204,8 +203,6 @@ func resultServer(replyChan chan *CountDirRequest, doneChan chan bool, finishCha
 // and launches the request and result Servers.
 // It also "primes" the doneChan with enough completion notices to allow the indicated
 // amount of parallel execution.
-// TODO: figure out why program crashes with MAX_AT_ONCE > 1 and
-// runtime.GOMAXPROCS(N) for N = 2, 4, or 8 set in testahgo.go.
 //
 func startServers() (reqChan chan *CountDirRequest, replyChan chan *CountDirRequest, doneChan chan bool, finishChan chan bool) {
 	defer un(trace("startServers"), nil)
