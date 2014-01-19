@@ -518,7 +518,7 @@ func printSizeAlign(s string, sz uintptr, al uintptr) {
 	fmt.Println("Type", s, "size", sz, "alignment", al)
 }
 
-func PrintSgfDbStructSizes() {
+func PrintSgfDbTypeSizes() {
 	// sgfdb.go
 	var tr TraceRec
 	var cdr CountDirRequest
