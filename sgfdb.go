@@ -69,7 +69,7 @@ func un(r TraceRec, done chan bool) {
 	if TRACE_SGFDB == 1 {
 		t1 := print_time("Leaving: ", r.s)
 		dur := t1.Sub(r.t)
-		fmt.Println("Duration: ", dur)
+		fmt.Println("Duration:", dur)
 	}
 	if done != nil { // test for nil for non-go routines
 		done <- true // signal completion, allow another to run
