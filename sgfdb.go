@@ -23,18 +23,15 @@ import (
 )
 
 // number of parallel executions
-//
 const MAX_AT_ONCE = 4
 
 // Number of moves per line in SGFDB .sgf files
 const SGFDB_NUM_PER_LINE = 12
 
 // variable set at beginning of program
-//
 var zero_time time.Time
 
 // print the time to complete an action
-//
 func print_time(action string, place string) (tim time.Time) {
 	tim = time.Now()
 	fmt.Println(action, place, tim)
@@ -43,18 +40,15 @@ func print_time(action string, place string) (tim time.Time) {
 
 // Set to 1 to enable tracing of sgfdb functions:
 // TODO: option to set
-//
 var TRACE_SGFDB = 0
 
 // TraceRec passes entry time to termination trace routine
-//
 type TraceRec struct {
 	s string
 	t time.Time
 }
 
 // trace is the entry trace routine
-//
 func trace(s string) TraceRec {
 	var t time.Time
 	if TRACE_SGFDB == 1 {
@@ -64,7 +58,6 @@ func trace(s string) TraceRec {
 }
 
 // un is the termination trace routine
-//
 func un(r TraceRec, done chan bool) {
 	if TRACE_SGFDB == 1 {
 		t1 := print_time("Leaving: ", r.s)
@@ -78,7 +71,6 @@ func un(r TraceRec, done chan bool) {
 
 // CountDirRequest holds the communication values and channels used to execute
 // CountDirectory in parallel as a go-routine.
-//
 type CountDirRequest struct {
 	// normal parameters
 	i         int    // order in Database directory
@@ -100,7 +92,6 @@ type CountDirRequest struct {
 // and the fourth return value is the Error.
 // Two channels are provided with the request, one for sending back the results,
 // and one to signal that the subroutine is complete (at end of trace output).
-//
 func CountDirectory(req *CountDirRequest) {
 	defer un(trace("CountDirectory"), req.done) // channel used for flow control and synchronization
 	dirFiles, e := ioutil.ReadDir(req.dir)
@@ -145,7 +136,6 @@ func CountDirectory(req *CountDirRequest) {
 // It receives CountDirRequest records from a reqChan, and dispatches them to CountDirectory,
 // except for the final request, with dir == "", which it sends directly to the replyChan.
 // TODO: make CountDirectory a parameter, so that ReadAndWriteDirectory can be run in parallel, too.
-//
 func requestServer(reqChan chan *CountDirRequest, replyChan chan *CountDirRequest, doneChan chan bool) {
 	defer un(trace("requestServer"), nil)
 	nRequests := 0
@@ -171,7 +161,6 @@ func requestServer(reqChan chan *CountDirRequest, replyChan chan *CountDirReques
 // resultServer runs as an independent go-routine.
 // It receives CountDirRequest records from CountDirectory, and tallies them,
 // except for a special final request, with dir == "", which is sent directly from requestServer.
-//
 func resultServer(replyChan chan *CountDirRequest, doneChan chan bool, finishChan chan bool) {
 	defer un(trace("resultServer"), finishChan)
 	var totalF, totalM int
@@ -203,7 +192,6 @@ func resultServer(replyChan chan *CountDirRequest, doneChan chan bool, finishCha
 // and launches the request and result Servers.
 // It also "primes" the doneChan with enough completion notices to allow the indicated
 // amount of parallel execution.
-//
 func startServers() (reqChan chan *CountDirRequest, replyChan chan *CountDirRequest, doneChan chan bool, finishChan chan bool) {
 	defer un(trace("startServers"), nil)
 	reqChan = make(chan *CountDirRequest, MAX_AT_ONCE)
@@ -224,7 +212,6 @@ func startServers() (reqChan chan *CountDirRequest, replyChan chan *CountDirRequ
 // CountFilesAndMoves reads the Database directory, starts the servers,
 // builds the requests, and sends them to the requestServer.
 // After sending a special final request, it waits for the finishChan to signal completion.
-//
 func CountFilesAndMoves(db_dir string, fileLimit int) int {
 	defer un(trace("CountFilesAndMoves"), nil)
 	// Read the sgfdb directories:
@@ -264,7 +251,6 @@ func CountFilesAndMoves(db_dir string, fileLimit int) int {
 //
 // TODO: Currently the function returns on the first error encountered.
 // TODO: Implement flags to allow processing to continue after an error.
-//
 func ReadAndWriteDirectory(dir string, outDir string, fileLimit int, moveLimit int, skipFiles int) (cntF int, cntT int, cntE int, err error) {
 	defer un(trace("ReadAndWriteDirectory"), nil)
 	dirFiles, err := ioutil.ReadDir(dir)
@@ -314,7 +300,6 @@ func ReadAndWriteDirectory(dir string, outDir string, fileLimit int, moveLimit i
 }
 
 // ReadDirectoryAndBuildPatterns
-//
 func ReadDirectoryAndBuildPatterns(dir_Name string, subDir_Name string, Pattern_dir string, patternTree *sgf.GameTree, pattern_typ ah.PatternType, fileLimit int, moveLimit int, skipFiles int) (*sgf.GameTree, error) {
 	defer un(trace("ReadDirectoryAndBuildPatterns"), nil)
 	var err error
@@ -374,7 +359,6 @@ func ReadDirectoryAndBuildPatterns(dir_Name string, subDir_Name string, Pattern_
 }
 
 // ReadDatabaseAndBuildPatterns
-//
 func ReadDatabaseAndBuildPatterns(db_dir string, pattern_dir string, pattern_typ ah.PatternType, fileLimit int, moveLimit int, skipFiles int) (status int) {
 	defer un(trace("ReadDatabaseAndBuildPatterns"), nil)
 	dirs, err := ioutil.ReadDir(db_dir)
@@ -402,7 +386,6 @@ func ReadDatabaseAndBuildPatterns(db_dir string, pattern_dir string, pattern_typ
 // ReadAndWriteDatabase reads the Database directory, and for each directory,
 // calls ReadAndWriteDirectory.
 // TODO: rewrite to use the request and result servers.
-//
 func ReadAndWriteDatabase(db_dir string, testout_dir string, fileLimit int, moveLimit int, skipFiles int) (status int) {
 	defer un(trace("ReadAndWriteDatabase"), nil)
 	// Read the sgfdb directories:
@@ -512,8 +495,6 @@ func ReadTeachingDirectory(teachDir string, teachPatsDir string, fileLimit int, 
 }
 
 // Some functions to print the size and alignment of types:
-//
-//func printSizeAlign(s string, sz int, al int) {
 func printSizeAlign(s string, sz uintptr, al uintptr) {
 	fmt.Println("Type", s, "size", sz, "alignment", al)
 }
