@@ -1,4 +1,9 @@
-package sgfdb
+package sgfdb_test
+
+import (
+	//    "testing"
+	. "gitHub.com/Ken1JF/ahgo/sgfdb"
+)
 
 func ExampleSgfDbTypeSizes() {
 	PrintSgfDbTypeSizes()
