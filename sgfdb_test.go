@@ -105,12 +105,8 @@ func ExampleReadWriteDatabase() {
 	//  43:2010, files: 2635, moves: 569596
 	//  44:2011, files: 2219, moves: 473040
 	//  45:2012, files: 0, moves: 0
-	//  46:Reading directory: /usr/local/GoGoD/Go/Database/GameList.txt:readdirent: invalid argument
 	//  47:GoLibrary2, files: 0, moves: 0
-	//  48:Reading directory: /usr/local/GoGoD/Go/Database/Instructions.txt:readdirent: invalid argument
-	//  49:Reading directory: /usr/local/GoGoD/Go/Database/NotesOnFiles.txt:readdirent: invalid argument
 	//  50:Onomasticon2, files: 0, moves: 0
-	//  51:Reading directory: /usr/local/GoGoD/Go/Database/UpdateInfo.txt:readdirent: invalid argument
 	// Total SGF files = 70179, total moves = 14582375
 	//  max Procs set back to 1.
 }
