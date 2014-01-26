@@ -23,7 +23,7 @@ import (
 )
 
 // number of parallel executions
-const MAX_AT_ONCE = 4
+var MAX_AT_ONCE = 4
 
 // Number of moves per line in SGFDB .sgf files
 const SGFDB_NUM_PER_LINE = 12
@@ -192,8 +192,11 @@ func resultServer(replyChan chan *CountDirRequest, doneChan chan bool, finishCha
 // and launches the request and result Servers.
 // It also "primes" the doneChan with enough completion notices to allow the indicated
 // amount of parallel execution.
-func startServers() (reqChan chan *CountDirRequest, replyChan chan *CountDirRequest, doneChan chan bool, finishChan chan bool) {
+func startServers(runParalParallel bool) (reqChan chan *CountDirRequest, replyChan chan *CountDirRequest, doneChan chan bool, finishChan chan bool) {
 	defer un(trace("startServers"), nil)
+	if runParalParallel == false {
+		MAX_AT_ONCE = 1
+	}
 	reqChan = make(chan *CountDirRequest, MAX_AT_ONCE)
 	replyChan = make(chan *CountDirRequest, MAX_AT_ONCE)
 	doneChan = make(chan bool, MAX_AT_ONCE)
@@ -212,7 +215,7 @@ func startServers() (reqChan chan *CountDirRequest, replyChan chan *CountDirRequ
 // CountFilesAndMoves reads the Database directory, starts the servers,
 // builds the requests, and sends them to the requestServer.
 // After sending a special final request, it waits for the finishChan to signal completion.
-func CountFilesAndMoves(db_dir string, fileLimit int) int {
+func CountFilesAndMoves(db_dir string, fileLimit int, runParalParallel bool) int {
 	defer un(trace("CountFilesAndMoves"), nil)
 	// Read the sgfdb directories:
 	dirs, err := ioutil.ReadDir(db_dir)
@@ -220,7 +223,7 @@ func CountFilesAndMoves(db_dir string, fileLimit int) int {
 		fmt.Printf("Error reading sgfdb directory: %s, %s\n", db_dir, err)
 		return 2
 	}
-	reqChan, replyChan, doneChan, finishChan := startServers()
+	reqChan, replyChan, doneChan, finishChan := startServers(runParalParallel)
 	nRequests := 0
 	//	errCount := 0;
 	// Loop:
