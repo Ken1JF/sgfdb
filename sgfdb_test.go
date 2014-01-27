@@ -2,15 +2,15 @@ package sgfdb_test
 
 import (
 	"fmt"
-	"gitHub.com/Ken1JF/sgf"
-	. "gitHub.com/Ken1JF/sgfdb"
+	"github.com/Ken1JF/sgf"
+	. "github.com/Ken1JF/sgfdb"
 	"os"
 	"runtime"
 	//	"testing"
 )
 
 const gogod_dir = "/usr/local/GoGoD"
-const SGFSpecFile = "../sgf_properties_spec.txt"
+const SGFSpecFile = "../sgf/sgf_properties_spec.txt"
 
 func ExampleSgfDbTypeSizes() {
 	PrintSgfDbTypeSizes()
