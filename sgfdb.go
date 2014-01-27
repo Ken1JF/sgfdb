@@ -227,14 +227,14 @@ func CountFilesAndMoves(db_dir string, fileLimit int, runParalParallel bool) int
 	nRequests := 0
 	//	errCount := 0;
 	// Loop:
-	for i, d := range dirs {
+	for _, d := range dirs {
 		if len(d.Name()) > 0 && d.Name()[0] != '.' {
 			file, err := os.Open(db_dir + d.Name())
 			if err == nil {
 				fileInfo, err2 := file.Stat()
 				if err2 == nil {
 					if fileInfo.IsDir() {
-						req := CountDirRequest{i: i, dir: db_dir + d.Name(), fileLimit: fileLimit, cntf: 0, cntm: 0, act: nil, err: nil, reply: replyChan, done: doneChan}
+						req := CountDirRequest{i: nRequests, dir: db_dir + d.Name(), fileLimit: fileLimit, cntf: 0, cntm: 0, act: nil, err: nil, reply: replyChan, done: doneChan}
 						reqChan <- &req
 						nRequests++
 					}
