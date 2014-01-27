@@ -2,8 +2,8 @@ package sgfdb_test
 
 import (
 	"fmt"
-	"gitHub.com/Ken1JF/ahgo/sgf"
-	. "gitHub.com/Ken1JF/ahgo/sgfdb"
+	"gitHub.com/Ken1JF/sgf"
+	. "gitHub.com/Ken1JF/sgfdb"
 	"os"
 	"runtime"
 	//	"testing"

@@ -1,5 +1,5 @@
 /*
- *  File:		src/gitHub.com/Ken1JF/ahgo/sgfdb/sgfdb.go
+ *  File:		src/gitHub.com/Ken1JF/sgfdb/sgfdb.go
  *  Project:	abst-hier
  *
  *  Created by Ken Friedenbach on 11/25/09.
@@ -15,8 +15,8 @@ import (
 	"time"
 	//    "syscall"
 	"fmt"
-	"gitHub.com/Ken1JF/ahgo/ah"
-	"gitHub.com/Ken1JF/ahgo/sgf"
+	"gitHub.com/Ken1JF/ah"
+	"gitHub.com/Ken1JF/sgf"
 	"strconv"
 	"strings"
 	"unsafe"
