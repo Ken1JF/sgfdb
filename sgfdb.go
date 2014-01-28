@@ -281,10 +281,10 @@ func ReadAndWriteDirectory(dir string, outDir string, fileLimit int, moveLimit i
 			}
 			// Use first call to turn on tracing, second to play while reading, third for GoGoD checking:
 			// and combinations.
-			//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.Trace, moveLimit)
-			//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.Play, moveLimit)
-			//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.GoGoD, moveLimit)
-			prsr, errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.GoGoD+sgf.Play, moveLimit)
+			//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.TraceParser, moveLimit)
+			//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.ParserPlay, moveLimit)
+			//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.ParserGoGoD, moveLimit)
+			prsr, errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.ParserGoGoD+sgf.ParserPlay, moveLimit)
 			cntF++
 			//			cntT += nTok;
 			//			cntE += nErr;
@@ -339,10 +339,10 @@ func ReadDirectoryAndBuildPatterns(dir_Name string, subDir_Name string, Pattern_
 					}
 					// Use first call to turn on tracing, second to play while reading, third for GoGoD checking:
 					// and combinations.
-					//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.Trace, moveLimit)
-					//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.Play, moveLimit)
-					//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.GoGoD, moveLimit)
-					/* prsr */ _, errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.GoGoD+sgf.Play, moveLimit)
+					//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.TraceParser, moveLimit)
+					//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.ParserPlay, moveLimit)
+					//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.ParserGoGoD, moveLimit)
+					/* prsr */ _, errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.ParserGoGoD+sgf.ParserPlay, moveLimit)
 					if len(errL) != 0 {
 						fmt.Printf("Error(s) during parsing: %s\n", fileName)
 						ah.PrintError(os.Stdout, errL)
@@ -462,7 +462,7 @@ func ReadTeachingDirectory(teachDir string, teachPatsDir string, fileLimit int, 
 					fmt.Printf("Error reading teaching File %d: %s, %s\n", i, fileName, err)
 					return 3
 				}
-				prsr, errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.GoGoD+sgf.Play, moveLimit)
+				prsr, errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.ParserGoGoD+sgf.ParserPlay, moveLimit)
 				if len(errL) != 0 {
 					fmt.Printf("Error %s during parsing: %s\n", errL.Error(), fileName)
 					return 4
