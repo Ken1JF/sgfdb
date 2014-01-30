@@ -229,17 +229,13 @@ func CountFilesAndMoves(db_dir string, fileLimit int, runParalParallel bool) int
 	// Loop:
 	for _, d := range dirs {
 		if len(d.Name()) > 0 && d.Name()[0] != '.' {
-			file, err := os.Open(db_dir + d.Name())
+			fileInfo, err := os.Stat(db_dir + d.Name())
 			if err == nil {
-				fileInfo, err2 := file.Stat()
-				if err2 == nil {
-					if fileInfo.IsDir() {
-						req := CountDirRequest{i: nRequests, dir: db_dir + d.Name(), fileLimit: fileLimit, cntf: 0, cntm: 0, act: nil, err: nil, reply: replyChan, done: doneChan}
-						reqChan <- &req
-						nRequests++
-					}
+				if fileInfo.IsDir() {
+					req := CountDirRequest{i: nRequests, dir: db_dir + d.Name(), fileLimit: fileLimit, cntf: 0, cntm: 0, act: nil, err: nil, reply: replyChan, done: doneChan}
+					reqChan <- &req
+					nRequests++
 				}
-				file.Close()
 			}
 		}
 	}
@@ -276,7 +272,7 @@ func ReadAndWriteDirectory(dir string, outDir string, fileLimit int, moveLimit i
 			fileName := dir + "/" + f.Name()
 			b, err := ioutil.ReadFile(fileName)
 			if err != nil && err != io.EOF {
-				fmt.Printf("Error reading File: %s, %s\n", fileName, err)
+				fmt.Printf("ReadAndWriteDirectory Error reading File: %s, %s\n", fileName, err)
 				return cntF, cntT, cntE, err
 			}
 			// Use first call to turn on tracing, second to play while reading, third for GoGoD checking:
@@ -289,15 +285,25 @@ func ReadAndWriteDirectory(dir string, outDir string, fileLimit int, moveLimit i
 			//			cntT += nTok;
 			//			cntE += nErr;
 			if len(errL) != 0 {
-				fmt.Printf("Error(s) during parsing: %s\n", fileName)
+				fmt.Printf("ReadAndWriteDirectory Error(s) during parsing: %s\n", fileName)
 				ah.PrintError(os.Stdout, errL)
 				return cntF, cntT, cntE, errL // stop on first error?
 			}
 			if outDir != "" {
 				outFileName := outDir + "/" + f.Name()
+				// Check the output directory. If missing, create it.
+				_, errS := os.Stat(outDir)
+				if errS != nil {
+					err2 := os.MkdirAll(outDir, os.ModeDir|os.ModePerm)
+					if err2 != nil {
+						fmt.Println("ReadAndWriteDirectory Error:", err2, "trying to create test output directory:", outDir)
+						fmt.Println("Original Error:", err, "trying os.Stat")
+						return cntF, cntT, cntE, err2 // stop on first error?
+					}
+				}
 				err = prsr.GameTree.WriteFile(outFileName, SGFDB_NUM_PER_LINE)
 				if err != nil {
-					fmt.Printf("Error writing: %s, %s\n", outFileName, err)
+					fmt.Printf("ReadAndWriteDirectory Error writing: %s, %s\n", outFileName, err)
 					return cntF, cntT, cntE, err
 				}
 			}
@@ -411,23 +417,27 @@ func ReadAndWriteDatabase(db_dir string, testout_dir string, fileLimit int, move
 	}
 	// turn on tracing:
 	//	ah.SetAHTrace(true)
-	for i, dir := range dirs {
-		if dir.Name()[0] != '.' {
-			nf, nt, ne, err /*, Cnts */ := ReadAndWriteDirectory(db_dir+dir.Name(), testout_dir+dir.Name(), fileLimit, moveLimit, skipFiles)
-			//			DirCnts[i] = Cnts
-			if err != nil {
-				fmt.Printf("%3d:%s, not a directory %s\n", i, dir.Name(), err)
-			} else {
-				idx := strings.LastIndex(dir.Name(), "/")
-				fmt.Printf("%3d:%s, files: %d, tokens: %d", i, dir.Name()[idx+1:], nf, nt)
-				if ne > 0 {
-					fmt.Printf("errors: %d\n", ne)
-				} else {
-					fmt.Printf("\n")
+	nDirs := 0
+	for _, dir := range dirs {
+		if len(dir.Name()) > 0 && dir.Name()[0] != '.' {
+			fileInfo, err := os.Stat(db_dir + dir.Name())
+			if err == nil {
+				if fileInfo.IsDir() {
+					nf, nt, ne, err /*, Cnts */ := ReadAndWriteDirectory(db_dir+dir.Name(), testout_dir+dir.Name(), 0, 0, 0)
+					if err == nil {
+						idx := strings.LastIndex(dir.Name(), "/")
+						fmt.Printf("%3d:%s, files: %d, tokens: %d", nDirs, dir.Name()[idx+1:], nf, nt)
+						if ne > 0 {
+							fmt.Printf("errors: %d\n", ne)
+						} else {
+							fmt.Printf("\n")
+						}
+						total_files += nf
+						total_tokens += nt
+						total_errors += ne
+						nDirs += 1
+					}
 				}
-				total_files += nf
-				total_tokens += nt
-				total_errors += ne
 			}
 		}
 	}
