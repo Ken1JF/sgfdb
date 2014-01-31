@@ -17,7 +17,7 @@ func ExampleSgfDbTypeSizes() {
 	PrintSgfDbTypeSizes()
 	// Output:
 	// Type TraceRec size 40 alignment 8
-	// Type CountDirRequest size 88 alignment 8
+	// Type CountDirRequest size 96 alignment 8
 }
 
 // Expected output when the link in /usr/local is in place: GoGoD -> /Users/ken/Documents/GO/GoGoD
@@ -77,20 +77,41 @@ func ExampleSgfDbTypeSizes() {
 
 func ExampleReadDatabaseCountMoves() {
 	var useDir = ""
+	var usingSecondDir = false
+	var linkTestOut = false
+
 	_, err := os.Stat(gogod_dir)
 	if err != nil {
-		fmt.Println("Not doing GoGoD ReadDatabaseCountMoves, error:", err, "accessing:", gogod_dir)
+		fmt.Println("Not doing GoGoD ExampleReadDatabaseCountMoves:", err, "accessing:", gogod_dir)
 		_, err2 := os.Stat(second_dir)
 		if err2 != nil {
-			fmt.Println("Not doing secondary test, error:", err2, "accessing:", second_dir)
+			fmt.Println("ExampleReadDatabaseCountMoves Error:", err2, "no secondary directory:", second_dir)
 			return
 		}
 		useDir = second_dir + "sgf/"
+		usingSecondDir = true
 	} else {
 		useDir = gogod_dir + "Go/Database/"
 	}
 
-	fmt.Println("running test, OK accessing:", useDir)
+	// If doing second_dir, check if sgf/testout exists.
+	// If not link it, temporarily.
+	if usingSecondDir {
+		_, err = os.Stat(useDir + "testout")
+		if err != nil {
+			err2 := os.Symlink(useDir+"testdata", useDir+"testout")
+			if err2 != nil {
+				fmt.Printf("ExampleReadDatabaseCountMoves Error: %s trying to link: %s\n", err2, useDir+"testout")
+			} else {
+				// debug: fmt.Printf("Set Symblink to:%s\n", useDir + "testout")
+				linkTestOut = true
+			}
+		}
+	} else {
+		fmt.Printf("ExampleReadDatabaseCountMoves: not using secondary dir.\n")
+	}
+
+	fmt.Println("running ExampleReadDatabaseCountMoves, OK accessing:", useDir)
 
 	// Need to run this with 1 CPU to get reproducible results
 	oldMaxProcs := 0
@@ -107,17 +128,24 @@ func ExampleReadDatabaseCountMoves() {
 	// If that test is ok, then the file is ok.
 	errN := sgf.SetupSGFProperties(SGFSpecFile, false, false)
 	if errN == 0 {
-		CountFilesAndMoves(useDir, 0, false)
+		CountFilesAndMoves(useDir, 0, false, sgf.ParserIgnoreUnknSGF)
 	}
 
+	// If testout was linked, unlink it.
+	if linkTestOut {
+		err = os.Remove(useDir + "testout")
+		if err != nil {
+			fmt.Printf("ExampleReadDatabaseCountMoves, Error: %s attempting to remove symbolic link to:%s\n", err, useDir+"testout")
+		}
+	}
 	// if GOMAXPROCS was changed, set it back
 	if oldMaxProcs != 0 {
 		fmt.Printf(" max Procs set back to %d.\n", oldMaxProcs)
 		runtime.GOMAXPROCS(oldMaxProcs)
 	}
 	// Output:
-	// Not doing GoGoD ReadDatabaseCountMoves, error: stat /usr/local/GoGoD: no such file or directory accessing: /usr/local/GoGoD
-	// running test, OK accessing: ../sgf/
+	// Not doing GoGoD ExampleReadDatabaseCountMoves: stat /usr/local/GoGoD: no such file or directory accessing: /usr/local/GoGoD
+	// running ExampleReadDatabaseCountMoves, OK accessing: ../sgf/
 	// num CPUs on Machine = 4, default max Procs was 1, now set to 1
 	//   0:testdata, files: 55, moves: 9127
 	//   1:testout, files: 55, moves: 9127
@@ -130,18 +158,21 @@ func ExampleReadDatabaseCountMoves() {
 func ExampleReadWriteDatabase() {
 	var useDir = ""
 	var testOutDir = ""
+	var usingSecondDir = false
+	var linkTestOut = false
 
 	// Check if GoGoD is present
 	_, err := os.Stat(gogod_dir)
 	if err != nil {
-		fmt.Println("Not doing GoGoD ReadWriteDatabase:", err, "accessing:", gogod_dir)
+		fmt.Println("Not doing GoGoD ExampleReadWriteDatabase:", err, "accessing:", gogod_dir)
 		_, err2 := os.Stat(second_dir)
 		if err2 != nil {
-			fmt.Println("Not doing ReadWriteDatabase:", err2, "accessing:", second_dir)
+			fmt.Println("ExampleReadWriteDatabase, Error:", err2, "no secondary directory:", second_dir)
 			return
 		}
 		useDir = second_dir + "sgf/"
 		testOutDir = second_dir + "sgfdb/dbout/"
+		usingSecondDir = true
 	} else {
 		useDir = gogod_dir + "Go/Database/"
 		testOutDir = gogod_dir + "dbout/"
@@ -149,7 +180,7 @@ func ExampleReadWriteDatabase() {
 	// Check that the input directory exists.
 	_, err = os.Stat(useDir)
 	if err != nil {
-		fmt.Println("Error: ReadWriteDatabase:", err, "accessing root directory:", useDir)
+		fmt.Println("Error: ExampleReadWriteDatabase:", err, "accessing root directory:", useDir)
 		return
 	}
 	// Check the output directory. If missing, create it.
@@ -157,12 +188,33 @@ func ExampleReadWriteDatabase() {
 	if err != nil {
 		err2 := os.MkdirAll(testOutDir, os.ModeDir|os.ModePerm)
 		if err2 != nil {
-			fmt.Println("Error: ReadWriteDatabase:", err2, "trying to create test output directory:", testOutDir)
+			fmt.Println("Error: ExampleReadWriteDatabase:", err2, "trying to create test output directory:", testOutDir)
 			fmt.Println("Original Error:", err, "trying os.Stat")
 			return
 		}
 	}
-	fmt.Println("Running ReadWriteDatabase, OK using:", useDir, "with output to:", testOutDir)
+
+	// If doing second_dir, check if sgf/testout exists.
+	// If not link it, temporarily.
+	if usingSecondDir {
+		// debug: finfo, err := os.Stat(useDir + "testout")
+		_, err := os.Stat(useDir + "testout")
+		if err != nil {
+			err2 := os.Symlink(useDir+"testdata", useDir+"testout")
+			if err2 != nil {
+				fmt.Printf("ExampleReadWriteDatabase Error: %s trying to link: %s\n", err2, useDir+"testout")
+			} else {
+				// debug: fmt.Printf("Set Symblink to:%s\n", useDir + "testout")
+				linkTestOut = true
+			}
+		} else {
+			// debug: fmt.Printf("Stat of %s = %v\n", useDir + "testout", finfo)
+		}
+	} else {
+		fmt.Printf("ExampleReadDatabaseCountMoves: not using secondary dir.\n")
+	}
+
+	fmt.Println("Running ExampleReadWriteDatabase, OK using:", useDir, "with output to:", testOutDir)
 
 	// Need to run this with 1 CPU to get reproducible results
 	oldMaxProcs := 0
@@ -179,13 +231,21 @@ func ExampleReadWriteDatabase() {
 	// If that test is ok, then the file is ok.
 	errN := sgf.SetupSGFProperties(SGFSpecFile, false, false)
 	if errN == 0 {
-		CountFilesAndMoves(useDir, 0, false)
+		CountFilesAndMoves(useDir, 0, false, sgf.ParserIgnoreUnknSGF)
 		skipFiles := 0 // do we need an option to set this???
-		stat := ReadAndWriteDatabase(useDir, testOutDir, 0, 0, skipFiles)
+		stat := ReadAndWriteDatabase(useDir, testOutDir, 0, 0, skipFiles, sgf.ParserIgnoreUnknSGF)
 		if stat > 0 {
-			fmt.Printf("Errors during reading and writing database: %d\n", stat)
+			fmt.Printf("ExampleReadWriteDatabase Errors during reading and writing database: %d\n", stat)
 		}
 		sgf.ReportSGFCounts()
+	}
+
+	// If testout was linked, unlink it.
+	if linkTestOut {
+		err = os.Remove(useDir + "testout")
+		if err != nil {
+			fmt.Printf("ExampleReadWriteDatabase Error: %s attempting to remove symbolic link to:%s\n", err, useDir+"testout")
+		}
 	}
 
 	// if GOMAXPROCS was changed, set it back
@@ -194,16 +254,14 @@ func ExampleReadWriteDatabase() {
 		runtime.GOMAXPROCS(oldMaxProcs)
 	}
 	// Output:
-	// Not doing GoGoD ReadWriteDatabase: stat /usr/local/GoGoD: no such file or directory accessing: /usr/local/GoGoD
-	// Running ReadWriteDatabase, OK using: ../sgf/ with output to: ../sgfdb/dbout/
+	// Not doing GoGoD ExampleReadWriteDatabase: stat /usr/local/GoGoD: no such file or directory accessing: /usr/local/GoGoD
+	// Running ExampleReadWriteDatabase, OK using: ../sgf/ with output to: ../sgfdb/dbout/
 	// num CPUs on Machine = 4, default max Procs was 1, now set to 1
 	//   0:testdata, files: 55, moves: 9127
 	//   1:testout, files: 55, moves: 9127
 	// Total SGF files = 110, total moves = 18254
 	// Reading and writing database, db_dir = ../sgf/, testout_dir = ../sgfdb/dbout/
-	// ../sgf/testdata/10.sgf:1:33: Unknown SGF property: WHAT:bb
 	//   0:testdata, files: 55, tokens: 0
-	// ../sgf/testout/10.sgf:3:16: Unknown SGF property: WHAT:bb
 	//   1:testout, files: 55, tokens: 0
 	// Total SGF files = 110, tokens = 0
 	// Property AB used 16 times.

@@ -76,6 +76,7 @@ type CountDirRequest struct {
 	i         int    // order in Database directory
 	dir       string // dir name, if == "", then i == -1 and fileLimit == count of dirs
 	fileLimit int    // fileLimit on files to read, 0 => no fileLimit
+	pmodeReq  sgf.ParserMode
 	// return values
 	cntf int     // count of files read
 	cntm int     // count of Nodes/moves (";")
@@ -215,7 +216,7 @@ func startServers(runParalParallel bool) (reqChan chan *CountDirRequest, replyCh
 // CountFilesAndMoves reads the Database directory, starts the servers,
 // builds the requests, and sends them to the requestServer.
 // After sending a special final request, it waits for the finishChan to signal completion.
-func CountFilesAndMoves(db_dir string, fileLimit int, runParalParallel bool) int {
+func CountFilesAndMoves(db_dir string, fileLimit int, runParalParallel bool, pmode sgf.ParserMode) int {
 	defer un(trace("CountFilesAndMoves"), nil)
 	// Read the sgfdb directories:
 	dirs, err := ioutil.ReadDir(db_dir)
@@ -232,7 +233,7 @@ func CountFilesAndMoves(db_dir string, fileLimit int, runParalParallel bool) int
 			fileInfo, err := os.Stat(db_dir + d.Name())
 			if err == nil {
 				if fileInfo.IsDir() {
-					req := CountDirRequest{i: nRequests, dir: db_dir + d.Name(), fileLimit: fileLimit, cntf: 0, cntm: 0, act: nil, err: nil, reply: replyChan, done: doneChan}
+					req := CountDirRequest{i: nRequests, dir: db_dir + d.Name(), fileLimit: fileLimit, pmodeReq: pmode, cntf: 0, cntm: 0, act: nil, err: nil, reply: replyChan, done: doneChan}
 					reqChan <- &req
 					nRequests++
 				}
@@ -259,7 +260,7 @@ func CountFilesAndMoves(db_dir string, fileLimit int, runParalParallel bool) int
 //
 // TODO: Currently the function returns on the first error encountered.
 // TODO: Implement flags to allow processing to continue after an error.
-func ReadAndWriteDirectory(dir string, outDir string, fileLimit int, moveLimit int, skipFiles int) (cntF int, cntT int, cntE int, err error) {
+func ReadAndWriteDirectory(dir string, outDir string, fileLimit int, moveLimit int, skipFiles int, pMode sgf.ParserMode) (cntF int, cntT int, cntE int, err error) {
 	defer un(trace("ReadAndWriteDirectory"), nil)
 	dirFiles, err := ioutil.ReadDir(dir)
 	if err != nil && err != io.EOF {
@@ -280,7 +281,7 @@ func ReadAndWriteDirectory(dir string, outDir string, fileLimit int, moveLimit i
 			//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.TraceParser+sgf.ParserDbStat, moveLimit)
 			//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.ParserPlay+sgf.ParserDbStat, moveLimit)
 			//			prsr,errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.ParserGoGoD+sgf.ParserDbStat, moveLimit)
-			prsr, errL := sgf.ParseFile(fileName, b, sgf.ParseComments+sgf.ParserGoGoD+sgf.ParserPlay+sgf.ParserDbStat, moveLimit)
+			prsr, errL := sgf.ParseFile(fileName, b, pMode+sgf.ParseComments+sgf.ParserGoGoD+sgf.ParserPlay+sgf.ParserDbStat, moveLimit)
 			cntF++
 			//			cntT += nTok;
 			//			cntE += nErr;
@@ -404,7 +405,7 @@ func ReadDatabaseAndBuildPatterns(db_dir string, pattern_dir string, pattern_typ
 // ReadAndWriteDatabase reads the Database directory, and for each directory,
 // calls ReadAndWriteDirectory.
 // TODO: rewrite to use the request and result servers.
-func ReadAndWriteDatabase(db_dir string, testout_dir string, fileLimit int, moveLimit int, skipFiles int) (status int) {
+func ReadAndWriteDatabase(db_dir string, testout_dir string, fileLimit int, moveLimit int, skipFiles int, pMode sgf.ParserMode) (status int) {
 	defer un(trace("ReadAndWriteDatabase"), nil)
 	// Read the sgfdb directories:
 	var total_files, total_tokens, total_errors int
@@ -423,7 +424,7 @@ func ReadAndWriteDatabase(db_dir string, testout_dir string, fileLimit int, move
 			fileInfo, err := os.Stat(db_dir + dir.Name())
 			if err == nil {
 				if fileInfo.IsDir() {
-					nf, nt, ne, err /*, Cnts */ := ReadAndWriteDirectory(db_dir+dir.Name(), testout_dir+dir.Name(), 0, 0, 0)
+					nf, nt, ne, err /*, Cnts */ := ReadAndWriteDirectory(db_dir+dir.Name(), testout_dir+dir.Name(), 0, 0, 0, pMode)
 					if err == nil {
 						idx := strings.LastIndex(dir.Name(), "/")
 						fmt.Printf("%3d:%s, files: %d, tokens: %d", nDirs, dir.Name()[idx+1:], nf, nt)
@@ -437,6 +438,8 @@ func ReadAndWriteDatabase(db_dir string, testout_dir string, fileLimit int, move
 						total_errors += ne
 						nDirs += 1
 					}
+				} else {
+					// debug: fmt.Printf("Name:%s is %v\n", dir.Name(), fileInfo)
 				}
 			}
 		}
