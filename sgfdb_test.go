@@ -11,6 +11,7 @@ import (
 
 const gogod_dir = "/usr/local/GoGoD"
 const second_dir = "../"
+
 const SGFSpecFile = "../sgf/sgf_properties_spec.txt"
 
 func ExampleSgfDbTypeSizes() {

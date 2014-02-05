@@ -279,7 +279,7 @@ func ProcessDirectory(req *DirectoryProcessRequest) {
 				// call the action funtion
 				if req.dbReq.FileActionFunc != nil {
 					idx := strings.LastIndex(f.Name(), "/")
-					if idx > 0 {
+					if idx >= 0 {
 						req.dbReq.FileActionFunc(req, f.Name()[idx+1:], b)
 					} else {
 						req.dbReq.FileActionFunc(req, f.Name(), b)
@@ -430,7 +430,7 @@ func CountFilesAndMoves(db_dir string, fileLimit int, runParalParallel bool, pmo
 func WriteSGFDirectory(r *DirectoryProcessRequest, fName string, b []byte) {
 	d := r.dir
 	idx := strings.LastIndex(d, "/")
-	if idx > 0 {
+	if idx >= 0 {
 		d = d[idx+1:]
 	}
 	fmt.Printf("%3d:%s, files: %d, tokens: %d", r.i, d, r.cntf, r.cntm)
@@ -468,7 +468,12 @@ func WriteSGFFile(r *DirectoryProcessRequest, fName string, b []byte) {
 		ah.PrintError(os.Stdout, errL)
 		return // cntF, cntT, cntE, errL // stop on first error?
 	}
-	outDir := r.dbReq.DBOutName + "/" + r.dir
+	inDir := r.dir
+	idx := strings.LastIndex(inDir, "/")
+	if idx >= 0 {
+		inDir = inDir[idx+1:]
+	}
+	outDir := r.dbReq.DBOutName + inDir
 	outFileName := outDir + "/" + fName
 	// Check the output directory. If missing, create it.
 	_, errS := os.Stat(outDir)

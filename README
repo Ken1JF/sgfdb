@@ -25,13 +25,14 @@ The function ProcessDatabase uses ioutil.ReadDir to read the base
     ProcessDatabase then iterates through the directories, builds a request 
     for each sub-directory and sends each request to the request channel. 
 
-        Count
-        ======================================
-These two functions use ProcessDatabase and ProcessDirectory to read
+        CountFilesAndMoves
+        ==================
+        
+This function uses ProcessDatabase and ProcessDirectory to read
 the files in the database, and the number of moves.
 
-The result is a count of the number of files and the number 
-of nodes (semi-colons) in each directory.
+The result is a count of the number of directores and the number 
+of files and nodes (semi-colons) in each directory.
 		
 		ReadAndWriteDatabase
 		====================
